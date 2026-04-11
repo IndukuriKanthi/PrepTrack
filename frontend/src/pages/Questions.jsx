@@ -1,235 +1,223 @@
 import React, { useEffect, useState } from "react";
 import API from "../services/api";
-import { Box, Card, CardContent, Typography, TextField, Button } from '@mui/material';
-import Navbar from "../components/Navbar";
-import { MenuItem } from "@mui/material";
 
 const Questions = () => {
-    const [questions, setQuestions] = useState([]);
-    const [newQuestion, setNewQuestion] = useState("");
-    const [topic, setTopic] = useState("");
-    const [editingId, setEditingId] = useState(null);
-    const [editQuestion, setEditQuestion] = useState('');
-    const [editTopic, setEditTopic] = useState('');
-    const [search, setSearch] = useState('');
-    const [selectedTopic, setSelectedTopic] = useState('');
+  const [questions, setQuestions] = useState([]);
+  const [newQuestion, setNewQuestion] = useState("");
+  const [topic, setTopic] = useState("");
 
-    const fetchQuestions = async () => {
-        try {
-            const res = await API.get("/questions");
-            setQuestions(res.data.data);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-    const handleAdd = async () => {
-        try {
-            await API.post("/questions", {
-                question: newQuestion,
-                topic: topic
-            });
-            setNewQuestion("");
-            setTopic("");
-            fetchQuestions();
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  const [editingId, setEditingId] = useState(null);
+  const [editQuestion, setEditQuestion] = useState("");
+  const [editTopic, setEditTopic] = useState("");
 
-    const handleDelete = async (id) => {
-        try {
-            await API.delete(`/questions/${id}`);
-                fetchQuestions();
-        } catch (err) {
-            console.error(err);
-        }
-    };
+  const [search, setSearch] = useState("");
+  const [selectedTopic, setSelectedTopic] = useState("");
 
+  const fetchQuestions = async () => {
+    const res = await API.get("/questions");
+    setQuestions(res.data.data);
+  };
 
-    const handleUpdate = async (id) => {
-        try {
-            await API.put(`/questions/${id}`, {
-            question: editQuestion,
-            topic: editTopic
-            });
+  useEffect(() => {
+    fetchQuestions();
+  }, []);
 
-            setEditingId(null);   // exit edit mode
-            fetchQuestions();     // refresh
-        } catch (err) {
-            console.error(err);
-        }
-    };
-
-    const handleEditClick = (q) => {
-        setEditingId(q._id);
-        setEditQuestion(q.question);
-        setEditTopic(q.topic);
-    };
-
-    const filteredQuestions = questions.filter((q) => {
-        return (
-            q.question.toLowerCase().includes(search.toLowerCase()) &&
-            q.topic.toLowerCase().includes(selectedTopic.toLowerCase())
-        );
+  const handleAdd = async () => {
+    await API.post("/questions", {
+      question: newQuestion,
+      topic,
     });
 
-    useEffect(() => {
-        fetchQuestions();
-    }, []);
+    setNewQuestion("");
+    setTopic("");
+    fetchQuestions();
+  };
 
-    const uniqueTopics = [...new Set(questions.map(q => q.topic))];
-    
+  const handleDelete = async (id) => {
+    await API.delete(`/questions/${id}`);
+    fetchQuestions();
+  };
+
+  const handleUpdate = async (id) => {
+    await API.put(`/questions/${id}`, {
+      question: editQuestion,
+      topic: editTopic,
+    });
+
+    setEditingId(null);
+    fetchQuestions();
+  };
+
+  const handleEditClick = (q) => {
+    setEditingId(q._id);
+    setEditQuestion(q.question);
+    setEditTopic(q.topic);
+  };
+
+  const filteredQuestions = questions.filter((q) => {
     return (
-        <>
-            <Navbar />
-            <Box sx={{ maxWidth: 700, margin: "auto", mt: 5 }}>
-            <div>
-                <Typography variant="h4" sx={{ mb: 3 }}>
-                    My Questions
-                </Typography>
-            {console.log(questions)}
+      q.question.toLowerCase().includes(search.toLowerCase()) &&
+      q.topic.toLowerCase().includes(selectedTopic.toLowerCase())
+    );
+  });
 
-            {/* ADD */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-            <TextField
-                label="Question"
-                value={newQuestion}
-                onChange={(e) => setNewQuestion(e.target.value)}
-            />
+  const uniqueTopics = [...new Set(questions.map((q) => q.topic))];
 
-            <TextField
-                label="Topic"
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-            />
+  return (
+    <div style={{ padding: "30px", maxWidth: "900px", margin: "auto" }}>
+      <h1 style={{ textAlign: "center", marginBottom: "30px" }}>
+        My Questions
+      </h1>
 
-            <Button variant="contained" onClick={handleAdd}>
-                Add
-            </Button>
-            </Box>
+      {/* 🔹 ADD */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+        <input
+          placeholder="Question"
+          value={newQuestion}
+          onChange={(e) => setNewQuestion(e.target.value)}
+          style={{ flex: 2, padding: "10px" }}
+        />
 
-            <hr />
+        <input
+          placeholder="Topic"
+          value={topic}
+          onChange={(e) => setTopic(e.target.value)}
+          style={{ flex: 1, padding: "10px" }}
+        />
 
-            <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        <button style={addBtn} onClick={handleAdd}>
+          ADD
+        </button>
+      </div>
 
-                <TextField
-                    label="Search"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+      <hr />
+
+      {/* 🔹 SEARCH + FILTER */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
+        <input
+          placeholder="Search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, padding: "10px" }}
+        />
+
+        <select
+          value={selectedTopic}
+          onChange={(e) => setSelectedTopic(e.target.value)}
+          style={{ padding: "10px" }}
+        >
+          <option value="">All Topics</option>
+          {uniqueTopics.map((t, i) => (
+            <option key={i} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+
+        <button
+          style={clearBtn}
+          onClick={() => {
+            setSearch("");
+            setSelectedTopic("");
+          }}
+        >
+          CLEAR
+        </button>
+      </div>
+
+      {/* 🔹 LIST */}
+      {filteredQuestions.length === 0 ? (
+        <p>No questions yet !!!</p>
+      ) : (
+        filteredQuestions.map((q) => (
+          <div key={q._id} style={card}>
+            {editingId === q._id ? (
+              <>
+                <input
+                  value={editQuestion}
+                  onChange={(e) => setEditQuestion(e.target.value)}
+                  style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
                 />
 
-                <TextField
-                    select
-                    label="Filter by Topic"
-                    value={selectedTopic}
-                    onChange={(e) => setSelectedTopic(e.target.value)}
-                    sx={{ minWidth: 200 }}
-                >
-                    <MenuItem value="">All</MenuItem>
+                <input
+                  value={editTopic}
+                  onChange={(e) => setEditTopic(e.target.value)}
+                  style={{ width: "100%", padding: "10px", marginBottom: "10px" }}
+                />
 
-                    {uniqueTopics.map((t, index) => (
-                    <MenuItem key={index} value={t}>
-                        {t}
-                    </MenuItem>
-                    ))}
-                </TextField>
+                <button style={addBtn} onClick={() => handleUpdate(q._id)}>
+                  SAVE
+                </button>
 
-                <Button
-                    variant="outlined"
-                    onClick={() => {
-                    setSearch('');
-                    setSelectedTopic('');
-                    }}
-                >
-                    Clear
-                </Button>
+                <button onClick={() => setEditingId(null)}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{q.question}</h3>
+                <p>Topic: {q.topic}</p>
 
-            </Box>
+                <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+                  <button style={editBtn} onClick={() => handleEditClick(q)}>
+                    EDIT
+                  </button>
 
-            {/* LIST */}
-            {questions.length === 0 ? (
-                <Typography>No questions yet </Typography>
-                ) : (
-                filteredQuestions.map((q) => (
-                    <Card
-                        key={q._id}
-                        sx={{
-                            mb: 2,
-                            p: 1,
-                            transition: "0.2s",
-                            '&:hover': {
-                            boxShadow: 6
-                            }
-                        }}
-                    >
-                    <CardContent>
-
-                        {editingId === q._id ? (
-                        <>
-                            <TextField
-                            fullWidth
-                            sx={{ mb: 1 }}
-                            value={editQuestion}
-                            onChange={(e) => setEditQuestion(e.target.value)}
-                            />
-
-                            <TextField
-                            fullWidth
-                            sx={{ mb: 1 }}
-                            value={editTopic}
-                            onChange={(e) => setEditTopic(e.target.value)}
-                            />
-
-                            <Button
-                            variant="contained"
-                            onClick={() => handleUpdate(q._id)}
-                            sx={{ mr: 1 }}
-                            >
-                            Save
-                            </Button>
-
-                            <Button onClick={() => setEditingId(null)}>
-                            Cancel
-                            </Button>
-                        </>
-                        ) : (
-                        <>
-                            <Typography variant="h6" fontWeight="bold">
-                                {q.question}
-                            </Typography>
-
-                            <Typography color="text.secondary">
-                                Topic: {q.topic}
-                            </Typography>
-
-                            <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                            <Button
-                                variant="outlined"
-                                sx={{ mr: 1 }}
-                                onClick={() => handleEditClick(q)}
-                            >
-                                Edit
-                            </Button>
-
-                            <Button
-                                variant="contained"
-                                color="error"
-                                onClick={() => handleDelete(q._id)}
-                            >
-                                Delete
-                            </Button>
-                            </Box>
-                        </>
-                        )}
-
-                    </CardContent>
-                    </Card>
-                ))
-                )}
-
+                  <button
+                    style={deleteBtn}
+                    onClick={() => handleDelete(q._id)}
+                  >
+                    DELETE
+                  </button>
                 </div>
-                </Box>
-        </>
-                );}
+              </>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  );
+};
+
+// 🔹 STYLES
+const card = {
+  border: "1px solid #ccc",
+  padding: "15px",
+  marginTop: "10px",
+  borderRadius: "10px",
+  backgroundColor: "#fafafa",
+};
+
+const addBtn = {
+  backgroundColor: "#1976d2",
+  color: "white",
+  padding: "10px 20px",
+  border: "none",
+  borderRadius: "6px",
+};
+
+const editBtn = {
+  padding: "8px 16px",
+  borderRadius: "6px",
+  border: "1px solid #1976d2",
+  color: "#1976d2",
+  backgroundColor: "white",
+};
+
+const deleteBtn = {
+  padding: "8px 16px",
+  borderRadius: "6px",
+  border: "none",
+  backgroundColor: "#d32f2f",
+  color: "white",
+};
+
+const clearBtn = {
+  padding: "8px 16px",
+  borderRadius: "6px",
+  border: "1px solid #1976d2",
+  color: "#1976d2",
+  backgroundColor: "white",
+};
 
 export default Questions;

@@ -1,20 +1,10 @@
 import React, { useEffect, useState } from "react";
-import API from "../services/api";
-import Navbar from "../components/Navbar";
-
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Card,
-  CardContent
-} from "@mui/material";
+import axios from "axios";
 
 const StudySessions = () => {
-  // 🔹 State
   const [sessions, setSessions] = useState([]);
 
+  // ADD FORM STATE
   const [subject, setSubject] = useState("");
   const [date, setDate] = useState("");
   const [startTime, setStartTime] = useState("");
@@ -22,10 +12,27 @@ const StudySessions = () => {
   const [dailyGoal, setDailyGoal] = useState("");
   const [notes, setNotes] = useState("");
 
-  // 🔹 Fetch Sessions
+  // EDIT STATE
+  const [editingId, setEditingId] = useState(null);
+  const [editData, setEditData] = useState({
+    subject: "",
+    date: "",
+    startTime: "",
+    endTime: "",
+    dailyGoal: "",
+    notes: "",
+  });
+
+  const token = localStorage.getItem("token");
+
+  // FETCH SESSIONS
   const fetchSessions = async () => {
     try {
-      const res = await API.get("/sessions");
+      const res = await axios.get("http://localhost:5000/api/sessions", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       setSessions(res.data.data);
     } catch (err) {
       console.error(err);
@@ -36,24 +43,20 @@ const StudySessions = () => {
     fetchSessions();
   }, []);
 
-  // 🔹 Add Session
+  // ADD SESSION
   const handleAdd = async () => {
     try {
-      if (!subject || !date || !startTime || !endTime) {
-        alert("Please fill required fields");
-        return;
-      }
+      await axios.post(
+        "http://localhost:5000/api/sessions",
+        { subject, date, startTime, endTime, dailyGoal, notes },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      await API.post("/sessions", {
-        subject,
-        date,
-        startTime,
-        endTime,
-        dailyGoal,
-        notes
-      });
-
-      // clear inputs
+      // reset form
       setSubject("");
       setDate("");
       setStartTime("");
@@ -67,27 +70,47 @@ const StudySessions = () => {
     }
   };
 
-  // 🔹 Delete
+  // DELETE SESSION
   const handleDelete = async (id) => {
     try {
-      await API.delete(`/sessions/${id}`);
+      await axios.delete(`http://localhost:5000/api/sessions/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       fetchSessions();
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🔹 Simple Update (basic)
+  // CLICK EDIT
+  const handleEditClick = (session) => {
+    setEditingId(session._id);
+    setEditData({
+      subject: session.subject,
+      date: session.date.split("T")[0],
+      startTime: session.startTime,
+      endTime: session.endTime,
+      dailyGoal: session.dailyGoal,
+      notes: session.notes,
+    });
+  };
+
+  // UPDATE SESSION
   const handleUpdate = async (id) => {
-    const newSubject = prompt("Enter new subject");
-
-    if (!newSubject) return;
-
     try {
-      await API.put(`/sessions/${id}`, {
-        subject: newSubject
-      });
+      await axios.put(
+        `http://localhost:5000/api/sessions/${id}`,
+        editData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
+      setEditingId(null);
       fetchSessions();
     } catch (err) {
       console.error(err);
@@ -95,120 +118,208 @@ const StudySessions = () => {
   };
 
   return (
-    <>
-      <Navbar />
+    <div style={{ padding: "30px", maxWidth: "900px", margin: "auto" }}>
+      <h1 style={{ textAlign: "center", marginBottom: "30px" }}>
+        Study Sessions
+      </h1>
 
-      <Box sx={{ maxWidth: 800, margin: "auto", mt: 5 }}>
+      {/* ADD FORM */}
+      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "20px" }}>
+        <input
+          placeholder="Subject"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          style={{ flex: 1, padding: "10px" }}
+        />
 
-        <Typography variant="h4" sx={{ mb: 3 }}>
-          Study Sessions
-        </Typography>
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          style={{ padding: "10px" }}
+        />
 
-        {/* 🔹 Add Form */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mb: 4 }}>
+        <input
+          type="time"
+          value={startTime}
+          onChange={(e) => setStartTime(e.target.value)}
+          style={{ padding: "10px" }}
+        />
 
-          <TextField
-            label="Subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-          />
+        <input
+          type="time"
+          value={endTime}
+          onChange={(e) => setEndTime(e.target.value)}
+          style={{ padding: "10px" }}
+        />
 
-          <TextField
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+        <input
+          placeholder="Daily Goal"
+          value={dailyGoal}
+          onChange={(e) => setDailyGoal(e.target.value)}
+          style={{ flex: 1, padding: "10px" }}
+        />
 
-          <TextField
-            type="time"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-          />
+        <input
+          placeholder="Notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          style={{ flex: 2, padding: "10px" }}
+        />
 
-          <TextField
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
+        <button
+          onClick={handleAdd}
+          style={{
+            background: "#1976d2",
+            color: "white",
+            padding: "10px 20px",
+            border: "none",
+            borderRadius: "6px",
+            cursor: "pointer",
+          }}
+        >
+          ADD
+        </button>
+      </div>
 
-          <TextField
-            label="Daily Goal"
-            value={dailyGoal}
-            onChange={(e) => setDailyGoal(e.target.value)}
-          />
+      <hr style={{ marginBottom: "20px" }} />
 
-          <TextField
-            label="Notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-          />
+      {/* LIST */}
+      {sessions.length === 0 ? (
+        <p style={{ textAlign: "center" }}>No sessions yet !!!</p>
+      ) : (
+        sessions.map((session) => (
+          <div
+            key={session._id}
+            style={{
+              border: "1px solid #ddd",
+              padding: "20px",
+              marginBottom: "15px",
+              borderRadius: "10px",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+            }}
+          >
+            {editingId === session._id ? (
+              <>
+                <input
+                  value={editData.subject}
+                  onChange={(e) =>
+                    setEditData({ ...editData, subject: e.target.value })
+                  }
+                  style={{ width: "100%", marginBottom: "8px", padding: "8px" }}
+                />
 
-          <Button variant="contained" onClick={handleAdd}>
-            Add Session
-          </Button>
-        </Box>
+                <input
+                  type="date"
+                  value={editData.date}
+                  onChange={(e) =>
+                    setEditData({ ...editData, date: e.target.value })
+                  }
+                  style={{ marginBottom: "8px", padding: "8px" }}
+                />
 
-        {/* 🔹 List */}
-        {sessions.length === 0 ? (
-          <Typography>No sessions yet 🚀</Typography>
-        ) : (
-          sessions.map((s) => (
-            <Card
-              key={s._id}
-              sx={{
-                mb: 2,
-                p: 1,
-                transition: "0.2s",
-                "&:hover": { boxShadow: 6 }
-              }}
-            >
-              <CardContent>
+                <input
+                  type="time"
+                  value={editData.startTime}
+                  onChange={(e) =>
+                    setEditData({ ...editData, startTime: e.target.value })
+                  }
+                  style={{ marginBottom: "8px", padding: "8px" }}
+                />
 
-                <Typography variant="h6" fontWeight="bold">
-                  {s.subject}
-                </Typography>
+                <input
+                  type="time"
+                  value={editData.endTime}
+                  onChange={(e) =>
+                    setEditData({ ...editData, endTime: e.target.value })
+                  }
+                  style={{ marginBottom: "8px", padding: "8px" }}
+                />
 
-                <Typography color="text.secondary">
-                  {new Date(s.date).toDateString()}
-                </Typography>
+                <input
+                  value={editData.dailyGoal}
+                  onChange={(e) =>
+                    setEditData({ ...editData, dailyGoal: e.target.value })
+                  }
+                  style={{ width: "100%", marginBottom: "8px", padding: "8px" }}
+                />
 
-                <Typography>
-                  {s.startTime} - {s.endTime}
-                </Typography>
+                <textarea
+                  value={editData.notes}
+                  onChange={(e) =>
+                    setEditData({ ...editData, notes: e.target.value })
+                  }
+                  style={{ width: "100%", marginBottom: "8px", padding: "8px" }}
+                />
 
-                <Typography>
-                  Goal: {s.dailyGoal}
-                </Typography>
+                <button
+                  onClick={() => handleUpdate(session._id)}
+                  style={{
+                    background: "#1976d2",
+                    color: "white",
+                    padding: "8px 15px",
+                    border: "none",
+                    borderRadius: "6px",
+                    marginRight: "10px",
+                  }}
+                >
+                  Save
+                </button>
 
-                <Typography>
-                  Notes: {s.notes}
-                </Typography>
+                <button
+                  onClick={() => setEditingId(null)}
+                  style={{
+                    padding: "8px 15px",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <>
+                <h3>{session.subject}</h3>
+                <p>{new Date(session.date).toDateString()}</p>
+                <p>
+                  {session.startTime} - {session.endTime}
+                </p>
+                <p>Goal: {session.dailyGoal}</p>
+                <p>Notes: {session.notes}</p>
 
-                <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    onClick={() => handleUpdate(s._id)}
-                  >
-                    Edit
-                  </Button>
+                <button
+                  onClick={() => handleEditClick(session)}
+                  style={{
+                    background: "#e3f2fd",
+                    color: "#1976d2",
+                    padding: "8px 15px",
+                    border: "1px solid #1976d2",
+                    borderRadius: "6px",
+                    marginRight: "10px",
+                  }}
+                >
+                  Edit
+                </button>
 
-                  <Button
-                    variant="contained"
-                    color="error"
-                    onClick={() => handleDelete(s._id)}
-                  >
-                    Delete
-                  </Button>
-                </Box>
-
-              </CardContent>
-            </Card>
-          ))
-        )}
-
-      </Box>
-    </>
+                <button
+                  onClick={() => handleDelete(session._id)}
+                  style={{
+                    background: "#d32f2f",
+                    color: "white",
+                    padding: "8px 15px",
+                    border: "none",
+                    borderRadius: "6px",
+                  }}
+                >
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        ))
+      )}
+    </div>
   );
 };
 
 export default StudySessions;
+

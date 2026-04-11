@@ -8,6 +8,7 @@ const Navbar = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
+  
 
   return (
     <AppBar position="static">
@@ -32,8 +33,16 @@ const Navbar = () => {
             Sessions
           </Button>
 
+          <Button color="inherit" onClick={() => navigate("/tasks")}>
+            Tasks
+          </Button>
+
           <Button color="inherit" onClick={() => navigate("/dashboard")}>
             Dashboard
+          </Button>
+
+          <Button color="inherit" onClick={() => navigate("/profile")}>
+            Profile
           </Button>
 
           <Button color="inherit" onClick={handleLogout}>

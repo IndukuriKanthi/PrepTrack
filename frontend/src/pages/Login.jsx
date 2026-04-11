@@ -72,6 +72,27 @@ const Login = () => {
         Login
       </Button>
 
+      <p
+        onClick={() => navigate("/forgot-password")}
+        style={{
+          color: "#1976d2",
+          cursor: "pointer",
+          marginTop: "10px",
+        }}
+      >
+        Forgot Password?
+      </p>
+
+      <p>
+        Don't have an account?{" "}
+        <span
+          onClick={() => navigate("/register")}
+          style={{ color: "#1976d2", cursor: "pointer" }}
+        >
+          Register
+        </span>
+      </p>
+
     </Box>
   );
 };

@@ -5,7 +5,10 @@ const connectDB = require("./src/config/db");
 const authRoutes = require("./src/routes/authRoutes");
 const studySessionRoutes = require("./src/routes/studySessionRoutes");
 const interviewQuestionRoutes = require("./src/routes/interviewQuestionRoutes");
+const taskRoutes = require("./src/routes/taskRoutes");
+const userRoutes = require("./src/routes/userRoutes");
 const { errorHandler } = require("./src/middleware/errorMiddleware");
+
 
 dotenv.config();
 connectDB();
@@ -19,6 +22,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/sessions", studySessionRoutes);
 app.use("/api/questions", interviewQuestionRoutes);
 app.use("/api/questions", interviewQuestionRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/users", userRoutes);
 
 app.use(errorHandler);
 

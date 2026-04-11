@@ -59,6 +59,25 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json({
+    success: true,
+    message: "Password updated successfully",
+  });
+});
+
 // Get Logged-in User
 const getMe = asyncHandler(async (req, res) => {
   res.status(200).json({
@@ -70,5 +89,6 @@ const getMe = asyncHandler(async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  forgotPassword, 
   getMe,
 };
